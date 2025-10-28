@@ -1,6 +1,8 @@
+import Home from "./pages/Home"
+
 const App = () => {
   return (
-    <div className="text-red-500 text-3xl font-bold">Tailwind is working!!!!!</div>
+  <Home/>
   )
 }
 export default App
