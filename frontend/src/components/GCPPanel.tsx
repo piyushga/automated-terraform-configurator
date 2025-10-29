@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../utils/appStore";
 
-const ProviderPanel = () => {
+const GCPPanel = () => {
     const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
     // state management
@@ -71,9 +71,9 @@ const ProviderPanel = () => {
     };
 
     return (
-        <div className="bg-white shadow-lg rounded-t-2xl p-6 mt-10 w-full max-w-4xl mx-auto border border-gray-100">
+        <div className="bg-white shadow-lg  p-6 w-full max-w-4xl mx-auto border border-gray-100">
             <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
-                AWS Configuration
+                GCP Configuration
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 items-end">
@@ -146,4 +146,4 @@ const ProviderPanel = () => {
     );
 };
 
-export default ProviderPanel;
+export default GCPPanel;

@@ -9,17 +9,17 @@ REGION_TO_LOCATION = {
     "us-west-1":   "US West (N. California)",
     "us-west-2":   "US West (Oregon)",
     "ca-central-1":"Canada (Central)",
-    "sa-east-1":   "South America (São Paulo)",
+    "sa-east-1":   "South America (Sao Paulo)",
 
     # Europe
-    "eu-west-1":   "Europe (Ireland)",
-    "eu-west-2":   "Europe (London)",
-    "eu-west-3":   "Europe (Paris)",
-    "eu-central-1":"Europe (Frankfurt)",
-    "eu-central-2":"Europe (Zurich)",
-    "eu-north-1":  "Europe (Stockholm)",
-    "eu-south-1":  "Europe (Milan)",
-    "eu-south-2":  "Europe (Spain)",   # Madrid
+     "eu-west-1":   "EU (Ireland)",
+    "eu-west-2":   "EU (London)",
+    "eu-west-3":   "EU (Paris)",
+    "eu-central-1":"EU (Frankfurt)",
+    "eu-central-2":"EU (Zurich)",
+    "eu-north-1":  "EU (Stockholm)",
+    "eu-south-1":  "EU (Milan)",
+    "eu-south-2":  "EU (Spain)",
 
     # Asia Pacific
     "ap-south-1":  "Asia Pacific (Mumbai)",
@@ -60,9 +60,26 @@ def get_linux_on_demand_monthly(region: str, instance_type: str, os_name: str = 
         ],
         MaxResults=1,
     )
+    # if not response.get("PriceList"):
+    #     # Try fallback if "Used" didn’t work
+    #     response = pricing.get_products(
+    #         ServiceCode="AmazonEC2",
+    #         Filters=[
+    #             {"Type": "TERM_MATCH", "Field": "instanceType", "Value": instance_type},
+    #             {"Type": "TERM_MATCH", "Field": "operatingSystem", "Value": os_name},
+    #             {"Type": "TERM_MATCH", "Field": "location", "Value": location},
+    #             {"Type": "TERM_MATCH", "Field": "capacitystatus", "Value": "Active"},
+    #             {"Type": "TERM_MATCH", "Field": "tenancy", "Value": "Shared"},
+    #             {"Type": "TERM_MATCH", "Field": "preInstalledSw", "Value": "NA"},
+    #         ],
+    #         MaxResults=1,
+    #     )
 
     if not response.get("PriceList"):
-        raise ValueError("No price found for that instance type.")
+        return {
+        "ok": False,
+        "error": f"No on-demand price found for {instance_type} in {region}"
+    }
 
     price_item = json.loads(response["PriceList"][0])
 

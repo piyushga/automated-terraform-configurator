@@ -1,25 +1,14 @@
 
-// const CommonForm = () => {
-//   return (
-//     <div className="flex flex-col m-2">
-//         <label>vCPU</label>
-//         <select className="w-4">
-//         <option>Select vPCU</option>
-//         <option>4</option>
-//         <option>6</option>
-//         </select>
-//     </div>
-//   )
-// }
-
-// export default CommonForm
-
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { vcpuGB, ramGB, storageGB } from "../utils/formSlice";
+
 
 const CommonForm: React.FC = () => {
   const [vcpu, setVcpu] = useState("");
   const [memory, setMemory] = useState("");
   const [storage, setStorage] = useState("");
+  const dispatch = useDispatch();
 
   return (
     <div className="bg-white shadow-md rounded-xl p-6 mt-10 w-full max-w-3xl">
@@ -35,10 +24,15 @@ const CommonForm: React.FC = () => {
           </label>
           <select
             value={vcpu}
-            onChange={(e) => setVcpu(e.target.value)}
+            onChange={(e) => {
+                const value = e.target.value;
+                setVcpu(value);
+                dispatch(vcpuGB(Number(value)));
+            
+            }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Select vCPUs</option>
+            {/* <option value="">Select vCPUs</option> */}
             {[1, 2, 4, 8, 16].map((num) => (
               <option key={num} value={num}>{num}</option>
             ))}
@@ -52,11 +46,15 @@ const CommonForm: React.FC = () => {
           </label>
           <select
             value={memory}
-            onChange={(e) => setMemory(e.target.value)}
+            onChange={(e) => {
+                const value = e.target.value;
+                setMemory(value);
+                dispatch(ramGB(Number(value)));
+            }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
 
           >
-            <option value="">Select RAM</option>
+            {/* <option value="">Select RAM</option> */}
             {[1, 2, 4, 8, 16, 32, 64].map((num) => (
               <option key={num} value={num}>{num}</option>
             ))}
@@ -70,7 +68,11 @@ const CommonForm: React.FC = () => {
           </label>
           <select
             value={storage}
-            onChange={(e) => setStorage(e.target.value)}
+            onChange={(e) =>{ 
+                const value = e.target.value;               
+                 setStorage(value)
+                 dispatch(storageGB(Number(value)));
+         }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select</option>
