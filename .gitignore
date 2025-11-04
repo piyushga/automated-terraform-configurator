@@ -5,6 +5,8 @@ frontend/dist
 # Python
 backend/venv
 __pycache__
+backend/credentials/gcp-key.json
+
 
 # Other
 .env
