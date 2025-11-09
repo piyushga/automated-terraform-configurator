@@ -37,7 +37,7 @@ def gcp_instance_types(
 ):
     try:
         items = list_gcp_instance_types(region, vcpu, ram_gb, max)
-         return {"ok": True, "count": len(items), "items": items}
+        return {"ok": True, "count": len(items), "items": items}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
         

@@ -1,4 +1,5 @@
 import AzurePanel from "../components/AzurePanel";
+import ChooseRecommended from "../components/ChooseRecommended";
 import CommonForm from "../components/CommonForm";
 import GCPPanel from "../components/GCPPanel";
 import Header from "../components/Header";
@@ -12,6 +13,7 @@ const Home = () => {
             <ProviderPanel />
             <GCPPanel />
             <AzurePanel />
+            <ChooseRecommended />
         </div>
     )
 }
