@@ -5,7 +5,6 @@ import type { RootState } from "../utils/appStore";
 const ProviderPanel = () => {
     const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-    // state management
     const [regions, setRegions] = useState<string[]>([]);
     const [instances, setInstances] = useState<{ instanceType: string; vcpus: number; memoryGiB: number }[]>([]);
     const [selectedRegion, setSelectedRegion] = useState<string>("");
@@ -14,16 +13,24 @@ const ProviderPanel = () => {
     const [loadingPrice, setLoadingPrice] = useState(false);
     const [loadingInstances, setLoadingInstances] = useState(false);
 
-
-
-    // redux values
+    // redux values (same as GCP)
     const vcpu = useSelector((store: RootState) => store.form.vcpu);
     const ramGB = useSelector((store: RootState) => store.form.ramGB);
 
-    // get region list once on mount
+    // Load AWS regions on mount
     useEffect(() => {
         getRegions();
     }, []);
+
+    // Reset Instance + Price when common form changes (just like GCP)
+    useEffect(() => {
+        setSelectedInstance("");
+        setPrice("-");
+        setInstances([]);     // clear old instance list
+        if (selectedRegion) {
+            getInstances(selectedRegion);
+        }
+    }, [vcpu, ramGB]);
 
     const getRegions = async () => {
         try {
@@ -36,7 +43,6 @@ const ProviderPanel = () => {
         }
     };
 
-    // fetch instances for selected region + vcpu + ram
     const getInstances = async (region: string) => {
         try {
             setLoadingInstances(true);
@@ -51,7 +57,6 @@ const ProviderPanel = () => {
         }
     };
 
-    // fetch price when both region + instance known
     const fetchPrice = async (region: string, instanceType: string) => {
         try {
             setLoadingPrice(true);
@@ -64,11 +69,19 @@ const ProviderPanel = () => {
             }
         } catch (err) {
             console.error("Error fetching price:", err);
-        }
-        finally {
+            setPrice("-");
+        } finally {
             setLoadingPrice(false);
         }
     };
+
+    // Enable create button only when everything is selected (same as GCP)
+    const isReady =
+        selectedRegion &&
+        selectedInstance &&
+        price !== "-" &&
+        !loadingPrice &&
+        !loadingInstances;
 
     return (
         <div className="bg-white shadow-lg rounded-t-2xl p-6 mt-10 w-full max-w-4xl mx-auto border border-gray-100">
@@ -77,7 +90,8 @@ const ProviderPanel = () => {
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 items-end">
-                {/* Region Dropdown */}
+
+                {/* Region */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1 text-center">Region</label>
                     <select
@@ -86,9 +100,9 @@ const ProviderPanel = () => {
                         onChange={(e) => {
                             const region = e.target.value;
                             setSelectedRegion(region);
-                            getInstances(region);   // loads instances for that region
-                            setSelectedInstance(""); // reset instance dropdown
-                            setPrice("-");           // reset price
+                            getInstances(region);
+                            setSelectedInstance("");
+                            setPrice("-");
                         }}
                     >
                         <option value="">Select Region</option>
@@ -100,7 +114,7 @@ const ProviderPanel = () => {
                     </select>
                 </div>
 
-                {/* Instance Type Dropdown */}
+                {/* Instance */}
                 <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1 text-center">Instance Type</label>
                     <select
@@ -110,23 +124,24 @@ const ProviderPanel = () => {
                             const instanceType = e.target.value;
                             setSelectedInstance(instanceType);
                             if (selectedRegion && instanceType) {
-                                fetchPrice(selectedRegion, instanceType); // call price only when both exist
+                                fetchPrice(selectedRegion, instanceType);
                             }
                         }}
                     >
                         <option value="">Select Instance</option>
-                        {loadingInstances
-                            ? <option disabled>Loading instances...</option>
-                            : instances.map((instance) => (
-                                <option key={instance.instanceType} value={instance.instanceType}>
-                                    {instance.instanceType}
+                        {loadingInstances ? (
+                            <option disabled>Loading...</option>
+                        ) : (
+                            instances.map((i) => (
+                                <option key={i.instanceType} value={i.instanceType}>
+                                    {i.instanceType}
                                 </option>
                             ))
-                        }
+                        )}
                     </select>
                 </div>
 
-                {/* Price Display */}
+                {/* Price */}
                 <div className="text-center sm:text-left">
                     <label className="block text-sm font-medium text-gray-600 mb-1 text-center">Price</label>
                     <button className="w-full border border-gray-300 text-gray-600 font-semibold py-2 px-4 rounded-lg">
@@ -134,10 +149,18 @@ const ProviderPanel = () => {
                     </button>
                 </div>
 
-                {/* Action Button */}
+                {/* Create button with same behavior as GCP */}
                 <div className="text-center sm:text-left">
                     <label className="block text-sm font-medium text-gray-600 mb-1 text-center">Action</label>
-                    <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-200">
+                    <button
+                        disabled={!isReady}
+                        className={`w-full font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-200 
+                            ${isReady
+                                ? "bg-blue-600 hover:bg-blue-700 text-white"
+                                : "bg-gray-300 cursor-not-allowed text-gray-500"
+                            }
+                        `}
+                    >
                         Create Resource
                     </button>
                 </div>

@@ -7,8 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from aws.regions import list_regions
 from aws.instances import list_instance_types
 from aws.pricing import get_linux_on_demand_monthly
+import os
+from routes.terraform_routes import router as tf_router
 
 load_dotenv()  # read .env
+print("DEBUG: GAC ->", os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 app = FastAPI(title="Terraform Configurator Backend")
 app.add_middleware(
     CORSMiddleware,
@@ -18,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(tf_router, prefix="/terraform")
 
 @app.get("/gcp/regions")
 def gcp_regions():
