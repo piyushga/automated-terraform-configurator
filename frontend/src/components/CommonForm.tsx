@@ -25,10 +25,10 @@ const CommonForm: React.FC = () => {
           <select
             value={vcpu}
             onChange={(e) => {
-                const value = e.target.value;
-                setVcpu(value);
-                dispatch(vcpuGB(Number(value)));
-            
+              const value = e.target.value;
+              setVcpu(value);
+              dispatch(vcpuGB(Number(value)));
+
             }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
@@ -47,9 +47,9 @@ const CommonForm: React.FC = () => {
           <select
             value={memory}
             onChange={(e) => {
-                const value = e.target.value;
-                setMemory(value);
-                dispatch(ramGB(Number(value)));
+              const value = e.target.value;
+              setMemory(value);
+              dispatch(ramGB(Number(value)));
             }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
 
@@ -62,7 +62,7 @@ const CommonForm: React.FC = () => {
         </div>
 
         {/* Storage */}
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
             Storage (GB)
           </label>
@@ -80,7 +80,7 @@ const CommonForm: React.FC = () => {
               <option key={num} value={num}>{num}</option>
             ))}
           </select>
-        </div>
+        </div> */}
       </div>
     </div>
   );

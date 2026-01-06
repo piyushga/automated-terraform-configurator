@@ -1,7 +1,9 @@
 // src/App.tsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import AwsResultPage from "./pages/AwsResultPage"; // <-- created earlier
+import AwsResultPage from "./pages/AwsResultPage";
+import GCPResultPage from "./pages/GCPResultPage";
+
 
 const App = () => {
   return (
@@ -9,7 +11,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/aws/result" element={<AwsResultPage />} />
-        {/* add other routes here if you need */}
+        <Route path="/gcp/result" element={<GCPResultPage />} />
       </Routes>
     </BrowserRouter>
   );

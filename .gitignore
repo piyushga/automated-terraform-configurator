@@ -6,6 +6,7 @@ frontend/dist
 backend/venv
 __pycache__
 backend/credentials/gcp-key.json
+backend/jobs/
 
 
 # Other
