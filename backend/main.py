@@ -7,6 +7,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from aws.regions import list_regions
 from aws.instances import list_instance_types
 from aws.pricing import get_linux_on_demand_monthly
+from azure.instances import list_azure_vm_sizes
+from azure.regions import list_azure_regions
+from azure.pricing import get_azure_vm_monthly_price
 import os
 from routes.terraform_routes import router as tf_router
 
@@ -101,3 +104,39 @@ def aws_price(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/azure/regions")
+def azure_regions():
+    try:
+        regions = list_azure_regions()
+        return {
+            "ok": True,
+            "count": len(regions),
+            "regions": regions
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/azure/instance-types")
+def azure_instance_types(
+    region: str = Query(...),
+    vcpu: int = Query(..., ge=1),
+    ram_gb: int = Query(..., ge=1),
+    max_results: int = 20
+):
+    try:
+        items = list_azure_vm_sizes(region, vcpu, ram_gb, max_results)
+        return {"ok": True, "count": len(items), "items": items}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/azure/price")
+def azure_price(region: str, vm_size: str):
+    try:
+        return get_azure_vm_monthly_price(region, vm_size)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
