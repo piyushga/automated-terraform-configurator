@@ -150,3 +150,82 @@ def download_gcp_terraform(job_id: str):
         media_type="text/plain",
         filename="main.tf"
     )
+
+@router.post("/azure/create")
+def azure_create(req: CreateRequest):
+    """
+    Synchronous Azure Terraform create:
+    - create job folder
+    - render Azure main.tf
+    - terraform init + apply
+    - return outputs
+    """
+    job_id = str(uuid.uuid4())
+    job_dir = WORK_ROOT / job_id
+
+    try:
+        job_dir.mkdir(parents=True, exist_ok=False)
+
+        ctx = {
+            "region": req.region,
+            "instance_type": req.instance_type,
+            "job": job_id,
+        }
+
+        rendered = render_template("azure_main.tf.j2", ctx)
+        (job_dir / "main.tf").write_text(rendered, encoding="utf-8")
+
+        subprocess.check_call(["terraform", "init", "-input=false"], cwd=job_dir)
+        # subprocess.check_call(["terraform", "apply", "-auto-approve"], cwd=job_dir)
+        subprocess.check_call(
+    [
+        "terraform",
+        "apply",
+        "-auto-approve",
+        f"-var=ssh_public_key={os.environ['TF_VAR_ssh_public_key']}"
+    ],
+    cwd=job_dir
+)
+
+        out = subprocess.check_output(
+            ["terraform", "output", "-json"],
+            cwd=job_dir,
+            text=True
+        )
+
+        return {
+            "ok": True,
+            "jobId": job_id,
+            "outputs": json.loads(out)
+        }
+
+    except subprocess.CalledProcessError as e:
+        return {
+            "ok": False,
+            "error": f"Terraform failed: {e}"
+        }
+
+    except Exception as e:
+        try:
+            shutil.rmtree(job_dir)
+        except Exception:
+            pass
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/azure/{job_id}/download")
+def download_azure_terraform(job_id: str):
+    """
+    Download generated Terraform file (main.tf) for Azure job
+    """
+    job_dir = WORK_ROOT / job_id
+    tf_file = job_dir / "main.tf"
+
+    if not tf_file.exists():
+        raise HTTPException(status_code=404, detail="Terraform file not found")
+
+    return FileResponse(
+        path=tf_file,
+        media_type="text/plain",
+        filename="main.tf"
+    )
+

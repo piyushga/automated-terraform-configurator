@@ -62,17 +62,17 @@ const CommonForm: React.FC = () => {
         </div>
 
         {/* Storage */}
-        {/* <div>
+        <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
             Storage (GB)
           </label>
           <select
             value={storage}
-            onChange={(e) =>{ 
-                const value = e.target.value;               
-                 setStorage(value)
-                 dispatch(storageGB(Number(value)));
-         }}
+            onChange={(e) => {
+              const value = e.target.value;
+              setStorage(value)
+              dispatch(storageGB(Number(value)));
+            }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Select</option>
@@ -80,7 +80,7 @@ const CommonForm: React.FC = () => {
               <option key={num} value={num}>{num}</option>
             ))}
           </select>
-        </div> */}
+        </div>
       </div>
     </div>
   );
