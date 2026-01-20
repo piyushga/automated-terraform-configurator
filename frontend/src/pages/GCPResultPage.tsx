@@ -73,6 +73,9 @@ export default function GCPResultPage() {
                         <div className="mt-3 text-sm text-gray-600">Public IP</div>
                         <div className="font-medium">{publicIp ?? "N/A"}</div>
 
+                        <div className="mt-3 text-sm text-gray-600">Block Storage</div>
+                        <div className="font-medium">30 GB</div>
+
                         <div className="mt-3 text-sm text-gray-600">Job ID</div>
                         <div className="font-medium">{state.jobId ?? "—"}</div>
 

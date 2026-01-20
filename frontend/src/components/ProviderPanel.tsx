@@ -149,8 +149,8 @@ const ProviderPanel = () => {
 
     return (
         <>
-            <div className="bg-white shadow-lg rounded-t-2xl p-6 mt-10 w-full max-w-4xl mx-auto border border-gray-100">
-                <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">AWS Configuration</h2>
+            <div className="bg-white shadow-lg rounded-t-2xl p-4 mt-10 w-full max-w-3xl mx-auto border border-gray-100">
+                <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">AWS</h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 items-end">
                     {/* Region */}
@@ -204,11 +204,13 @@ const ProviderPanel = () => {
                     </div>
 
                     {/* Price */}
-                    <div className="text-center sm:text-left">
-                        <label className="block text-sm font-medium text-gray-600 mb-1 text-center">Price</label>
-                        <button className="w-full border border-gray-300 text-gray-600 font-semibold py-2 px-4 rounded-lg">
-                            {loadingPrice ? "Fetching price..." : price}
-                        </button>
+                    <div className="text-center">
+                        <label className="block text-sm font-medium text-gray-600 mb-1 text-center">
+                            Price
+                        </label>
+                        <div className="w-full border border-gray-300 py-2 rounded-lg">
+                            {loadingPrice ? "Fetching..." : price}
+                        </div>
                     </div>
 
                     {/* Create */}

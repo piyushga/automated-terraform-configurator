@@ -229,3 +229,21 @@ def download_azure_terraform(job_id: str):
         filename="main.tf"
     )
 
+@router.get("/aws/{job_id}/download")
+def download_aws_terraform(job_id: str):
+    """
+    Download generated Terraform file (main.tf) for AWS job
+    """
+    job_dir = WORK_ROOT / job_id
+    tf_file = job_dir / "main.tf"
+
+    if not tf_file.exists():
+        raise HTTPException(status_code=404, detail="Terraform file not found")
+
+    return FileResponse(
+        path=tf_file,
+        media_type="text/plain",
+        filename="main.tf"
+    )
+
+

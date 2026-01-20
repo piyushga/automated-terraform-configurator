@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { vcpuGB, ramGB, storageGB } from "../utils/formSlice";
@@ -32,7 +31,6 @@ const CommonForm: React.FC = () => {
             }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            {/* <option value="">Select vCPUs</option> */}
             {[1, 2, 4, 8, 16].map((num) => (
               <option key={num} value={num}>{num}</option>
             ))}
@@ -54,7 +52,7 @@ const CommonForm: React.FC = () => {
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
 
           >
-            {/* <option value="">Select RAM</option> */}
+
             {[1, 2, 4, 8, 16, 32, 64].map((num) => (
               <option key={num} value={num}>{num}</option>
             ))}
@@ -75,8 +73,7 @@ const CommonForm: React.FC = () => {
             }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">Select</option>
-            {[10, 20].map((num) => (
+            {[30].map((num) => (
               <option key={num} value={num}>{num}</option>
             ))}
           </select>

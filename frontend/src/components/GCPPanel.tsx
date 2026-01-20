@@ -145,9 +145,9 @@ const GCPPanel = () => {
 
     return (
         <>
-            <div className="bg-white shadow-lg rounded-t-2xl p-6 mt-10 w-full max-w-4xl mx-auto border border-gray-100">
+            <div className="bg-white shadow-lg p-4 w-full max-w-3xl mx-auto border border-gray-100">
                 <h2 className="text-xl font-semibold text-gray-800 mb-6 text-center">
-                    GCP Configuration
+                    GCP
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 items-end">
