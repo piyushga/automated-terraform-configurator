@@ -17,7 +17,7 @@ def list_gcp_instance_types(region: str, vcpu: int, ram_gb: int, max_results: in
         cpu = mt.guest_cpus
         mem = round(mt.memory_mb / 1024)   # convert MB → GiB
 
-        if cpu == vcpu and mem == ram_gb:   # ✅ filter exactly like AWS
+        if cpu == vcpu and mem == ram_gb:  
             result.append({
                 "machineType": mt.name,
                 "vcpus": cpu,

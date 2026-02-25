@@ -1,13 +1,14 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { vcpuGB, ramGB, storageGB } from "../utils/formSlice";
+import type { RootState } from "../utils/appStore";
 
 
 const CommonForm: React.FC = () => {
-  const [vcpu, setVcpu] = useState("");
-  const [memory, setMemory] = useState("");
-  const [storage, setStorage] = useState("");
   const dispatch = useDispatch();
+  const { vcpu, ramGB: memory, storageGB: storage } = useSelector(
+    (store: RootState) => store.form
+  );
 
   return (
     <div className="bg-white shadow-md rounded-xl p-6 mt-10 w-full max-w-3xl">
@@ -24,9 +25,7 @@ const CommonForm: React.FC = () => {
           <select
             value={vcpu}
             onChange={(e) => {
-              const value = e.target.value;
-              setVcpu(value);
-              dispatch(vcpuGB(Number(value)));
+              dispatch(vcpuGB(Number(e.target.value)));
 
             }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -45,9 +44,7 @@ const CommonForm: React.FC = () => {
           <select
             value={memory}
             onChange={(e) => {
-              const value = e.target.value;
-              setMemory(value);
-              dispatch(ramGB(Number(value)));
+              dispatch(ramGB(Number(e.target.value)));
             }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
 
@@ -67,9 +64,7 @@ const CommonForm: React.FC = () => {
           <select
             value={storage}
             onChange={(e) => {
-              const value = e.target.value;
-              setStorage(value)
-              dispatch(storageGB(Number(value)));
+              dispatch(storageGB(Number(e.target.value)));
             }}
             className="w-full border border-gray-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >

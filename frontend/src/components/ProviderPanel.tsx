@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../utils/appStore";
 import LoadingOverlay from "./LoadingOverlay";
@@ -16,9 +16,14 @@ const ProviderPanel = () => {
 
     const [loadingPrice, setLoadingPrice] = useState(false);
     const [loadingInstances, setLoadingInstances] = useState(false);
+    const [regionsError, setRegionsError] = useState("");
+    const [instancesError, setInstancesError] = useState("");
 
     // loader state (replaces old modal)
     const [creating, setCreating] = useState(false);
+    const regionsAbortRef = useRef<AbortController | null>(null);
+    const instancesAbortRef = useRef<AbortController | null>(null);
+    const priceAbortRef = useRef<AbortController | null>(null);
 
     // redux values
     const vcpu = useSelector((store: RootState) => store.form.vcpu);
@@ -26,6 +31,14 @@ const ProviderPanel = () => {
 
     useEffect(() => {
         getRegions();
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            regionsAbortRef.current?.abort();
+            instancesAbortRef.current?.abort();
+            priceAbortRef.current?.abort();
+        };
     }, []);
 
     // Reset instance + price on vcpu/ram changes (same UX as GCP)
@@ -37,42 +50,77 @@ const ProviderPanel = () => {
     }, [vcpu, ramGB]);
 
     const getRegions = async () => {
+        const controller = new AbortController();
+        regionsAbortRef.current?.abort();
+        regionsAbortRef.current = controller;
+
         try {
-            const resp = await fetch(`${BASE_URL}/aws/regions`);
+            setRegionsError("");
+            const resp = await fetch(`${BASE_URL}/aws/regions`, { signal: controller.signal });
             const data = await resp.json();
-            setRegions(data?.regions ?? []);
+            if (regionsAbortRef.current === controller) {
+                setRegions(data?.regions ?? []);
+            }
         } catch (err) {
+            if (controller.signal.aborted) return;
             console.error("Failed to load regions", err);
             setRegions([]);
+            setRegionsError("Failed to load regions.");
         }
     };
 
     const getInstances = async (region: string) => {
+        const controller = new AbortController();
+        instancesAbortRef.current?.abort();
+        instancesAbortRef.current = controller;
+
         try {
             setLoadingInstances(true);
-            const resp = await fetch(`${BASE_URL}/aws/instance-types?region=${region}&vcpu=${vcpu}&ram_gb=${ramGB}`);
+            setInstancesError("");
+            const resp = await fetch(
+                `${BASE_URL}/aws/instance-types?region=${region}&vcpu=${vcpu}&ram_gb=${ramGB}`,
+                { signal: controller.signal }
+            );
             const data = await resp.json();
-            setInstances(data?.items ?? []);
+            if (instancesAbortRef.current === controller) {
+                setInstances(data?.items ?? []);
+            }
         } catch (err) {
+            if (controller.signal.aborted) return;
             console.error("Failed to load instances", err);
             setInstances([]);
+            setInstancesError("Failed to load instance types.");
         } finally {
-            setLoadingInstances(false);
+            if (instancesAbortRef.current === controller) {
+                setLoadingInstances(false);
+            }
         }
     };
 
     const fetchPrice = async (region: string, instanceType: string) => {
+        const controller = new AbortController();
+        priceAbortRef.current?.abort();
+        priceAbortRef.current = controller;
+
         try {
             setLoadingPrice(true);
-            const res = await fetch(`${BASE_URL}/aws/price?region=${region}&instance_type=${instanceType}`);
+            const res = await fetch(
+                `${BASE_URL}/aws/price?region=${region}&instance_type=${instanceType}`,
+                { signal: controller.signal }
+            );
             const data = await res.json();
-            if (data.ok) setPrice(`${data.monthlyUSD} USD/Monthly`);
-            else setPrice("-");
+            if (priceAbortRef.current === controller) {
+                if (data.ok) setPrice(`${data.monthlyUSD} USD/Monthly`);
+                else setPrice("-");
+            }
         } catch (err) {
+            if (controller.signal.aborted) return;
             console.error("Error fetching price:", err);
             setPrice("-");
         } finally {
-            setLoadingPrice(false);
+            if (priceAbortRef.current === controller) {
+                setLoadingPrice(false);
+            }
         }
     };
 
@@ -131,12 +179,12 @@ const ProviderPanel = () => {
                     },
                 });
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             setCreating(false);
             navigate("/aws/result", {
                 state: {
                     ok: false,
-                    error: String(err?.message ?? err),
+                    error: err instanceof Error ? err.message : String(err),
                     region: selectedRegion,
                     instance_type: selectedInstance,
                     vcpu,
@@ -174,6 +222,18 @@ const ProviderPanel = () => {
                                 </option>
                             ))}
                         </select>
+                        {regionsError && (
+                            <div className="mt-1 text-xs text-red-600 flex items-center justify-between gap-2">
+                                <span>{regionsError}</span>
+                                <button
+                                    type="button"
+                                    onClick={getRegions}
+                                    className="underline"
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Instance */}
@@ -201,6 +261,20 @@ const ProviderPanel = () => {
                                 ))
                             )}
                         </select>
+                        {instancesError && (
+                            <div className="mt-1 text-xs text-red-600 flex items-center justify-between gap-2">
+                                <span>{instancesError}</span>
+                                {selectedRegion && (
+                                    <button
+                                        type="button"
+                                        onClick={() => getInstances(selectedRegion)}
+                                        className="underline"
+                                    >
+                                        Retry
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Price */}

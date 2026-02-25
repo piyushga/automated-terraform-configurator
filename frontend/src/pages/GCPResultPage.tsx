@@ -1,12 +1,49 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
+type TerraformOutputPrimitive = string | number | boolean | null;
+type TerraformOutputValue =
+    | TerraformOutputPrimitive
+    | { value?: TerraformOutputPrimitive };
+
+type GCPResultState = {
+    ok?: boolean;
+    outputs?: Record<string, TerraformOutputValue> | null;
+    raw?: { outputs?: Record<string, TerraformOutputValue> | null } | null;
+    jobId?: string;
+    region?: string;
+    instanceType?: string;
+    vcpu?: number;
+    ramGB?: number;
+    createdAt?: string;
+    error?: string;
+};
+
+const getOutputValue = (
+    outputs: Record<string, TerraformOutputValue> | null,
+    key: string
+): TerraformOutputPrimitive => {
+    const output = outputs?.[key];
+    if (output === null || output === undefined) return null;
+    if (typeof output === "object") {
+        return output.value ?? null;
+    }
+    return output;
+};
+
 export default function GCPResultPage() {
     const loc = useLocation();
     const nav = useNavigate();
-    const state: any = loc.state ?? {};
+    const state = (loc.state as GCPResultState | null) ?? null;
 
-    // same guard as AWS
-    if (!state || (!state.outputs && state.ok === false && !state.raw && !state.jobId)) {
+    if (
+        !state ||
+        (!state.outputs &&
+            !state.raw?.outputs &&
+            !state.jobId &&
+            !state.error &&
+            !state.region &&
+            !state.instanceType)
+    ) {
         return (
             <div className="min-h-screen bg-slate-100 flex items-center justify-center p-6">
                 <div className="bg-white rounded-xl shadow p-6 max-w-xl w-full text-center">
@@ -29,13 +66,12 @@ export default function GCPResultPage() {
 
     const ok = state.ok !== false;
     const outputs = state.outputs ?? state.raw?.outputs ?? null;
-    const instanceId = outputs?.instance_id?.value ?? outputs?.instance_id ?? null;
-    const publicIp = outputs?.public_ip?.value ?? outputs?.public_ip ?? null;
+    const instanceId = getOutputValue(outputs, "instance_id");
+    const publicIp = getOutputValue(outputs, "public_ip");
 
-    const terraformDownloadUrl =
-        state.jobId
-            ? `${import.meta.env.VITE_API_BASE_URL}/terraform/gcp/${state.jobId}/download`
-            : null;
+    const terraformDownloadUrl = state.jobId
+        ? `${import.meta.env.VITE_API_BASE_URL}/terraform/gcp/${state.jobId}/download`
+        : null;
 
     return (
         <div className="min-h-screen bg-slate-100 py-10 px-4">
@@ -44,27 +80,25 @@ export default function GCPResultPage() {
                     {ok ? "Resource created successfully" : "Resource creation failed"}
                 </h1>
 
-                {/* Metadata */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                         <div className="text-xs text-gray-500">Region</div>
-                        <div className="font-medium">{state.region ?? "—"}</div>
+                        <div className="font-medium">{state.region ?? "-"}</div>
                     </div>
                     <div>
                         <div className="text-xs text-gray-500">Instance Type</div>
-                        <div className="font-medium">{state.instanceType ?? "—"}</div>
+                        <div className="font-medium">{state.instanceType ?? "-"}</div>
                     </div>
                     <div>
                         <div className="text-xs text-gray-500">vCPU (selected)</div>
-                        <div className="font-medium">{state.vcpu ?? "—"}</div>
+                        <div className="font-medium">{state.vcpu ?? "-"}</div>
                     </div>
                     <div>
                         <div className="text-xs text-gray-500">RAM (GiB selected)</div>
-                        <div className="font-medium">{state.ramGB ?? "—"}</div>
+                        <div className="font-medium">{state.ramGB ?? "-"}</div>
                     </div>
                 </div>
 
-                {/* Results */}
                 {ok ? (
                     <div className="rounded border p-4 bg-green-50 mb-4">
                         <div className="text-sm text-gray-600">Instance ID</div>
@@ -77,10 +111,10 @@ export default function GCPResultPage() {
                         <div className="font-medium">30 GB</div>
 
                         <div className="mt-3 text-sm text-gray-600">Job ID</div>
-                        <div className="font-medium">{state.jobId ?? "—"}</div>
+                        <div className="font-medium">{state.jobId ?? "-"}</div>
 
                         <div className="mt-3 text-sm text-gray-600">Created At</div>
-                        <div className="font-medium">{state.createdAt ?? "—"}</div>
+                        <div className="font-medium">{state.createdAt ?? "-"}</div>
                     </div>
                 ) : (
                     <div className="rounded border p-4 bg-red-50 mb-4">

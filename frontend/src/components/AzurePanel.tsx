@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import type { RootState } from "../utils/appStore";
@@ -20,12 +20,25 @@ const AzurePanel = () => {
     const [loadingInstances, setLoadingInstances] = useState(false);
     const [loadingPrice, setLoadingPrice] = useState(false);
     const [creating, setCreating] = useState(false);
+    const [regionsError, setRegionsError] = useState("");
+    const [instancesError, setInstancesError] = useState("");
+    const regionsAbortRef = useRef<AbortController | null>(null);
+    const instancesAbortRef = useRef<AbortController | null>(null);
+    const priceAbortRef = useRef<AbortController | null>(null);
 
     const vcpu = useSelector((store: RootState) => store.form.vcpu);
     const ramGB = useSelector((store: RootState) => store.form.ramGB);
 
     useEffect(() => {
         getRegions();
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            regionsAbortRef.current?.abort();
+            instancesAbortRef.current?.abort();
+            priceAbortRef.current?.abort();
+        };
     }, []);
 
     useEffect(() => {
@@ -36,43 +49,74 @@ const AzurePanel = () => {
     }, [vcpu, ramGB]);
 
     const getRegions = async () => {
+        const controller = new AbortController();
+        regionsAbortRef.current?.abort();
+        regionsAbortRef.current = controller;
+
         try {
-            const res = await fetch(`${BASE_URL}/azure/regions`);
+            setRegionsError("");
+            const res = await fetch(`${BASE_URL}/azure/regions`, { signal: controller.signal });
             const data = await res.json();
-            setRegions(data?.regions ?? []);
+            if (regionsAbortRef.current === controller) {
+                setRegions(data?.regions ?? []);
+            }
         } catch {
+            if (controller.signal.aborted) return;
             setRegions([]);
+            setRegionsError("Failed to load regions.");
         }
     };
 
     const getInstances = async (region: string) => {
+        const controller = new AbortController();
+        instancesAbortRef.current?.abort();
+        instancesAbortRef.current = controller;
+
         try {
             setLoadingInstances(true);
+            setInstancesError("");
             const res = await fetch(
-                `${BASE_URL}/azure/instance-types?region=${region}&vcpu=${vcpu}&ram_gb=${ramGB}`
+                `${BASE_URL}/azure/instance-types?region=${region}&vcpu=${vcpu}&ram_gb=${ramGB}`,
+                { signal: controller.signal }
             );
             const data = await res.json();
-            setInstances(data?.items ?? []);
+            if (instancesAbortRef.current === controller) {
+                setInstances(data?.items ?? []);
+            }
         } catch {
+            if (controller.signal.aborted) return;
             setInstances([]);
+            setInstancesError("Failed to load VM sizes.");
         } finally {
-            setLoadingInstances(false);
+            if (instancesAbortRef.current === controller) {
+                setLoadingInstances(false);
+            }
         }
     };
 
     const fetchPrice = async (region: string, vmSize: string) => {
+        const controller = new AbortController();
+        priceAbortRef.current?.abort();
+        priceAbortRef.current = controller;
+
         try {
             setLoadingPrice(true);
             const res = await fetch(
-                `${BASE_URL}/azure/price?region=${region}&vm_size=${vmSize}`
+                `${BASE_URL}/azure/price?region=${region}&vm_size=${vmSize}`,
+                { signal: controller.signal }
             );
             const data = await res.json();
-            if (data.ok) setPrice(`${data.monthlyUSD} USD/Monthly`);
-            else setPrice("-");
+            if (priceAbortRef.current === controller) {
+                if (data.ok) setPrice(`${data.monthlyUSD} USD/Monthly`);
+                else setPrice("-");
+            }
         } catch {
+            if (controller.signal.aborted) return;
             setPrice("-");
         } finally {
-            setLoadingPrice(false);
+            if (priceAbortRef.current === controller) {
+                setLoadingPrice(false);
+            }
         }
     };
 
@@ -112,12 +156,12 @@ const AzurePanel = () => {
                     createdAt: new Date().toISOString()
                 },
             });
-        } catch (err: any) {
+        } catch (err: unknown) {
             setCreating(false);
             navigate("/azure/result", {
                 state: {
                     ok: false,
-                    error: err.message,
+                    error: err instanceof Error ? err.message : String(err),
                     region: selectedRegion,
                     instanceType: selectedInstance,
                     vcpu,
@@ -158,6 +202,18 @@ const AzurePanel = () => {
                                 <option key={r} value={r}>{r}</option>
                             ))}
                         </select>
+                        {regionsError && (
+                            <div className="mt-1 text-xs text-red-600 flex items-center justify-between gap-2">
+                                <span>{regionsError}</span>
+                                <button
+                                    type="button"
+                                    onClick={getRegions}
+                                    className="underline"
+                                >
+                                    Retry
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Instance */}
@@ -185,6 +241,20 @@ const AzurePanel = () => {
                                     </option>
                                 ))}
                         </select>
+                        {instancesError && (
+                            <div className="mt-1 text-xs text-red-600 flex items-center justify-between gap-2">
+                                <span>{instancesError}</span>
+                                {selectedRegion && (
+                                    <button
+                                        type="button"
+                                        onClick={() => getInstances(selectedRegion)}
+                                        className="underline"
+                                    >
+                                        Retry
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Price */}
