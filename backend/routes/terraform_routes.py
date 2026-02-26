@@ -32,14 +32,20 @@ class CreateRequest(BaseModel):
     ram_gb: int | None = None
 
 class GcpCreateRequest(BaseModel):
-    project_id: str
     region: str
-    zone: str
     instance_type: str
+
+TERRAFORM_TIMEOUT_SECONDS = int(os.getenv("TERRAFORM_TIMEOUT_SECONDS", "1800"))
 
 def render_template(template_name: str, context: dict) -> str:
     tpl = ENV.get_template(template_name)
     return tpl.render(**context)
+
+def get_required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise HTTPException(status_code=500, detail=f"{name} not set")
+    return value
 
 @router.post("/aws/create")
 def aws_create(req: CreateRequest):
@@ -70,13 +76,25 @@ def aws_create(req: CreateRequest):
         (job_dir / "main.tf").write_text(rendered)
 
         # Initialize terraform
-        subprocess.check_call(["terraform", "init", "-input=false"], cwd=str(job_dir))
+        subprocess.check_call(
+            ["terraform", "init", "-input=false"],
+            cwd=str(job_dir),
+            timeout=TERRAFORM_TIMEOUT_SECONDS
+        )
 
         # Apply terraform (auto-approve)
-        subprocess.check_call(["terraform", "apply", "-auto-approve", "-input=false"], cwd=str(job_dir))
+        subprocess.check_call(
+            ["terraform", "apply", "-auto-approve", "-input=false"],
+            cwd=str(job_dir),
+            timeout=TERRAFORM_TIMEOUT_SECONDS
+        )
 
         # Read outputs as json
-        out = subprocess.check_output(["terraform", "output", "-json"], cwd=str(job_dir))
+        out = subprocess.check_output(
+            ["terraform", "output", "-json"],
+            cwd=str(job_dir),
+            timeout=TERRAFORM_TIMEOUT_SECONDS
+        )
         outputs = json.loads(out)
 
         return {"ok": True, "jobId": job_id, "outputs": outputs}
@@ -94,32 +112,39 @@ def aws_create(req: CreateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/gcp/create")
-def gcp_create(req: dict):
+def gcp_create(req: GcpCreateRequest):
     job_id = str(uuid.uuid4())
     job_dir = WORK_ROOT / job_id
-    project_id = os.getenv("GCP_PROJECT_ID")
-    if not project_id:
-        raise HTTPException(status_code=500, detail="GCP_PROJECT_ID not set")
+    project_id = get_required_env("GCP_PROJECT_ID")
 
     try:
         job_dir.mkdir(parents=True, exist_ok=False)
 
         ctx = {
             "project_id": project_id,
-            "region": req["region"],
-            "instance_type": req["instance_type"],
+            "region": req.region,
+            "instance_type": req.instance_type,
         }
 
         rendered = render_template("gcp_main.tf.j2", ctx)
         (job_dir / "main.tf").write_text(rendered, encoding="utf-8")
 
-        subprocess.check_call(["terraform", "init", "-input=false"], cwd=job_dir)
-        subprocess.check_call(["terraform", "apply", "-auto-approve"], cwd=job_dir)
+        subprocess.check_call(
+            ["terraform", "init", "-input=false"],
+            cwd=job_dir,
+            timeout=TERRAFORM_TIMEOUT_SECONDS
+        )
+        subprocess.check_call(
+            ["terraform", "apply", "-auto-approve"],
+            cwd=job_dir,
+            timeout=TERRAFORM_TIMEOUT_SECONDS
+        )
 
         out = subprocess.check_output(
             ["terraform", "output", "-json"],
             cwd=job_dir,
-            text=True
+            text=True,
+            timeout=TERRAFORM_TIMEOUT_SECONDS
         )
 
         return {
@@ -175,22 +200,28 @@ def azure_create(req: CreateRequest):
         rendered = render_template("azure_main.tf.j2", ctx)
         (job_dir / "main.tf").write_text(rendered, encoding="utf-8")
 
-        subprocess.check_call(["terraform", "init", "-input=false"], cwd=job_dir)
-        # subprocess.check_call(["terraform", "apply", "-auto-approve"], cwd=job_dir)
+        subprocess.check_call(
+            ["terraform", "init", "-input=false"],
+            cwd=job_dir,
+            timeout=TERRAFORM_TIMEOUT_SECONDS
+        )
+        ssh_public_key = get_required_env("TF_VAR_ssh_public_key")
         subprocess.check_call(
     [
         "terraform",
         "apply",
         "-auto-approve",
-        f"-var=ssh_public_key={os.environ['TF_VAR_ssh_public_key']}"
+        f"-var=ssh_public_key={ssh_public_key}"
     ],
-    cwd=job_dir
+    cwd=job_dir,
+    timeout=TERRAFORM_TIMEOUT_SECONDS
 )
 
         out = subprocess.check_output(
             ["terraform", "output", "-json"],
             cwd=job_dir,
-            text=True
+            text=True,
+            timeout=TERRAFORM_TIMEOUT_SECONDS
         )
 
         return {

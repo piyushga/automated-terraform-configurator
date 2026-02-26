@@ -10,11 +10,9 @@ from aws.pricing import get_linux_on_demand_monthly
 from azure.instances import list_azure_vm_sizes
 from azure.regions import list_azure_regions
 from azure.pricing import get_azure_vm_monthly_price
-import os
 from routes.terraform_routes import router as tf_router
 
 load_dotenv()  # read .env
-print("DEBUG: GAC ->", os.getenv("GOOGLE_APPLICATION_CREDENTIALS"))
 app = FastAPI(title="Terraform Configurator Backend")
 app.add_middleware(
     CORSMiddleware,

@@ -1,6 +1,7 @@
 import requests
 
 AZURE_PRICING_URL = "https://prices.azure.com/api/retail/prices"
+REQUEST_TIMEOUT_SECONDS = 20
 
 def get_azure_vm_monthly_price(region: str, vm_size: str):
     filter_query = (
@@ -18,9 +19,13 @@ def get_azure_vm_monthly_price(region: str, vm_size: str):
         # IMPORTANT:
         # params ONLY on first request
         if next_link == AZURE_PRICING_URL:
-            resp = requests.get(next_link, params={"$filter": filter_query})
+            resp = requests.get(
+                next_link,
+                params={"$filter": filter_query},
+                timeout=REQUEST_TIMEOUT_SECONDS
+            )
         else:
-            resp = requests.get(next_link)
+            resp = requests.get(next_link, timeout=REQUEST_TIMEOUT_SECONDS)
 
         resp.raise_for_status()
         data = resp.json()
