@@ -7,6 +7,13 @@ WORKDIR /app
 # Copy only requirements first (for better caching)
 COPY requirements.txt .
 
+# Install Terraform
+RUN apt-get update && apt-get install -y unzip curl && \
+    curl -o terraform.zip https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip && \
+    unzip terraform.zip && \
+    mv terraform /usr/local/bin/ && \
+    rm terraform.zip
+
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
