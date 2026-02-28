@@ -12,27 +12,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: us-east-1
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+      - uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker Image
+      - name: Build, Tag, Push
+        env:
+          ECR_REGISTRY: 264119764851.dkr.ecr.us-east-1.amazonaws.com
+          ECR_REPOSITORY: fastapi-backend
         run: |
-          docker build -t fastapi-backend ./backend
-
-      - name: Tag Docker Image
-        run: |
-          docker tag fastapi-backend:latest 264119764851.dkr.ecr.us-east-1.amazonaws.com/fastapi-backend:latest
-
-      - name: Push to ECR
-        run: |
-          docker push 264119764851.dkr.ecr.us-east-1.amazonaws.com/fastapi-backend:latest
+          docker build -t $ECR_REPOSITORY ./backend
+          docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
