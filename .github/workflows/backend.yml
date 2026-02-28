@@ -31,8 +31,8 @@ jobs:
 
       - name: Tag Docker Image
         run: |
-          docker tag fastapi-backend:latest 2641195651.dkr.ecr.us-east-1.amazonaws.com/fastapi-backend:latest
+          docker tag fastapi-backend:latest 264119764851.dkr.ecr.us-east-1.amazonaws.com/fastapi-backend:latest
 
       - name: Push to ECR
         run: |
-          docker push 2641195651.dkr.ecr.us-east-1.amazonaws.com/fastapi-backend:latest
+          docker push 264119764851.dkr.ecr.us-east-1.amazonaws.com/fastapi-backend:latest
