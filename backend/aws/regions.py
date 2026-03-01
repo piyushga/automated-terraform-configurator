@@ -1,4 +1,4 @@
-#AWS SDK 3
+#AWS SDK 4
 import boto3
 
 def list_regions(all_regions=False):
