@@ -1,4 +1,4 @@
-name: Build and Push FastAPI to ECR
+name: CI - Build, Test and Push FastAPI to ECR
 
 on:
   push:
@@ -14,6 +14,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ---------- Install Python ----------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ---------- Install Dependencies ----------
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      # ---------- Run Tests ----------
+      - name: Run tests
+        run: |
+          cd backend
+          pytest
+
+      # ---------- Configure AWS ----------
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -22,6 +41,7 @@ jobs:
 
       - uses: aws-actions/amazon-ecr-login@v2
 
+      # ---------- Build & Push Docker ----------
       - name: Build, Tag, Push
         env:
           ECR_REGISTRY: 264119764851.dkr.ecr.us-east-1.amazonaws.com
