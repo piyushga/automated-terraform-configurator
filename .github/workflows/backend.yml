@@ -50,3 +50,12 @@ jobs:
           docker build -t $ECR_REPOSITORY ./backend
           docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      # ---------- Trigger CodeDeploy ----------
+      - name: Trigger CodeDeploy Deployment
+        run: |
+          aws deploy create-deployment \
+            --application-name fastapi-app \
+            --deployment-group-name fastapi-deployment-group \
+            --deployment-config-name CodeDeployDefault.AllAtOnce \
+            --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
