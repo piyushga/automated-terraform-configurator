@@ -37,7 +37,6 @@ Make sure your `frontend/.env` contains:
 
 ```env
 VITE_API_BASE_URL=http://127.0.0.1:8000
-VITE_GCP_PROJECT_ID=your-gcp-project-id
 ```
 
 Run the frontend:
@@ -87,9 +86,11 @@ pip install -r requirements.txt
 Make sure your `backend/.env` contains the required cloud and Terraform variables, for example:
 
 ```env
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=
 GCP_PROJECT_ID=your-gcp-project-id
-TERRAFORM_TIMEOUT_SECONDS=1800
-
+GOOGLE_APPLICATION_CREDENTIALS=
 AZURE_TENANT_ID=your-azure-tenant-id
 AZURE_CLIENT_ID=your-azure-client-id
 AZURE_CLIENT_SECRET=your-azure-client-secret
@@ -131,5 +132,5 @@ Terraform is executed automatically by the backend when a user creates infrastru
 
 ## Author
 
-**Piyush**  
-Master's Thesis Project
+**Piyush Garg**  
+
