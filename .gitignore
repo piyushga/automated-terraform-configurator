@@ -4,7 +4,15 @@ frontend/dist
 
 # Python
 backend/venv
+backend/.venv
+.venv
 __pycache__
+*.pyc
+.pytest_cache/
+backend/credentials/gcp-key.json
+backend/jobs/
+
+
 
 # Other
 .env
