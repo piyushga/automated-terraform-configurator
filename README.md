@@ -15,7 +15,7 @@ The goal of the project is to simplify infrastructure provisioning by allowing u
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/automated-terraform-configurator.git
+git clone https://github.com/piyushga/automated-terraform-configurator.git
 cd automated-terraform-configurator
 ```
 
